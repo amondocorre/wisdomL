@@ -1,0 +1,16 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /sisven/
+  
+  # Si el archivo o carpeta existe físicamente (ej. assets, imágenes o la carpeta backend), servirlo directamente
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Excluir explícitamente cualquier petición a la carpeta backend
+  RewriteCond %{REQUEST_URI} ^/sisven/backend/ [NC]
+  RewriteRule ^ - [L]
+
+  # Redirigir el resto al index.html del frontend
+  RewriteRule ^ index.html [L]
+</IfModule>
