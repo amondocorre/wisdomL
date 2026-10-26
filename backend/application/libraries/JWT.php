@@ -18,7 +18,45 @@ class JWT {
         return $base64UrlHeader . "." . $base64UrlPayload . "." . $base64UrlSignature;
     }
 
-    public static function decode($token) {
+    public static function extraerToken() {
+        $tokenHeader = null;
+        $CI =& get_instance();
+        if ($CI && isset($CI->input)) {
+            $headers = $CI->input->request_headers();
+            if (isset($headers['Authorization'])) {
+                $tokenHeader = $headers['Authorization'];
+            } elseif (isset($headers['authorization'])) {
+                $tokenHeader = $headers['authorization'];
+            }
+        }
+
+        if (!$tokenHeader) {
+            if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+                $tokenHeader = $_SERVER['HTTP_AUTHORIZATION'];
+            } elseif (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+                $tokenHeader = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
+            } elseif (function_exists('apache_request_headers')) {
+                $apacheHeaders = apache_request_headers();
+                if (isset($apacheHeaders['Authorization'])) {
+                    $tokenHeader = $apacheHeaders['Authorization'];
+                } elseif (isset($apacheHeaders['authorization'])) {
+                    $tokenHeader = $apacheHeaders['authorization'];
+                }
+            }
+        }
+
+        return $tokenHeader ? trim(str_ireplace('Bearer', '', $tokenHeader)) : null;
+    }
+
+    public static function decode($token = null) {
+        if ($token === null || $token === '') {
+            $token = self::extraerToken();
+        }
+        if (!$token) {
+            return false;
+        }
+
+        $token = trim(str_ireplace('Bearer', '', $token));
         $parts = explode('.', $token);
         if (count($parts) !== 3) {
             return false;

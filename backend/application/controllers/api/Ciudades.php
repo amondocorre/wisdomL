@@ -28,9 +28,16 @@ class Ciudades extends CI_Controller {
             $tokenHeader = $_SERVER['HTTP_AUTHORIZATION'];
         } elseif (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
             $tokenHeader = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
+        } elseif (function_exists('apache_request_headers')) {
+            $apacheHeaders = apache_request_headers();
+            if (isset($apacheHeaders['Authorization'])) {
+                $tokenHeader = $apacheHeaders['Authorization'];
+            } elseif (isset($apacheHeaders['authorization'])) {
+                $tokenHeader = $apacheHeaders['authorization'];
+            }
         }
 
-        $token = $tokenHeader ? str_replace('Bearer ', '', $tokenHeader) : null;
+        $token = $tokenHeader ? trim(str_ireplace('Bearer', '', $tokenHeader)) : null;
         return JWT::decode($token);
     }
 

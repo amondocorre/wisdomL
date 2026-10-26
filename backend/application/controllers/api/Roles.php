@@ -30,9 +30,16 @@ class Roles extends CI_Controller {
             $tokenHeader = $_SERVER['HTTP_AUTHORIZATION'];
         } elseif (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
             $tokenHeader = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
+        } elseif (function_exists('apache_request_headers')) {
+            $apacheHeaders = apache_request_headers();
+            if (isset($apacheHeaders['Authorization'])) {
+                $tokenHeader = $apacheHeaders['Authorization'];
+            } elseif (isset($apacheHeaders['authorization'])) {
+                $tokenHeader = $apacheHeaders['authorization'];
+            }
         }
 
-        $token = $tokenHeader ? str_replace('Bearer ', '', $tokenHeader) : null;
+        $token = $tokenHeader ? trim(str_ireplace('Bearer', '', $tokenHeader)) : null;
         return JWT::decode($token);
     }
 
@@ -406,7 +413,12 @@ class Roles extends CI_Controller {
             return;
         }
 
-        $rolNombre = isset($usuario->rol) ? strtoupper($usuario->rol) : '';
+        $rolNombre = '';
+        if (is_array($usuario) && isset($usuario['rol'])) {
+            $rolNombre = strtoupper($usuario['rol']);
+        } elseif (is_object($usuario) && isset($usuario->rol)) {
+            $rolNombre = strtoupper($usuario->rol);
+        }
         $role = $this->db->get_where('roles', ['nombre' => $rolNombre])->row_array();
 
         // Obtener todos los menús activos
